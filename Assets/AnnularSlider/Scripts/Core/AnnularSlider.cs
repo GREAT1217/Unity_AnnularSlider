@@ -29,17 +29,19 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
     public class DragValueEvent : UnityEvent<float>
     {
     }
-    
+
     [SerializeField] private Image _fillImage;
-    [SerializeField] private RectTransform _handleRect;
-    [SerializeField] private float _radius = 10f;
     [SerializeField] private Image.Origin360 _fillOrigin;
     [SerializeField] private bool _clockwise;
+    [SerializeField] private bool _wholeNumbers;
     [SerializeField] private float _minValue;
     [SerializeField] private float _maxValue = 1f;
-    [SerializeField] private float _value;
-    [SerializeField] private bool _wholeNumbers;
     [SerializeField] private float _maxAngle = 360f;
+    [SerializeField] private float _value;
+
+    [SerializeField] private RectTransform _handleRect;
+    [SerializeField] private float _radius = 10f;
+    [SerializeField] private bool _towardCenter;
 
     [SerializeField] private DragValueEvent _onValueChanged = new DragValueEvent();
     [SerializeField] private DragEvent _onBeginDragged = new DragEvent();
@@ -56,30 +58,6 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
             if (SetClass(ref _fillImage, value))
             {
                 UpdateCachedReferences();
-                UpdateVisuals();
-            }
-        }
-    }
-
-    public RectTransform HandleRect
-    {
-        get { return _handleRect; }
-        set
-        {
-            if (SetClass(ref _handleRect, value))
-            {
-                UpdateVisuals();
-            }
-        }
-    }
-
-    public float Radius
-    {
-        get { return _radius; }
-        set
-        {
-            if (SetStruct(ref _radius, value))
-            {
                 UpdateVisuals();
             }
         }
@@ -104,6 +82,19 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
         {
             if (SetStruct(ref _clockwise, value))
             {
+                UpdateVisuals();
+            }
+        }
+    }
+
+    public bool WholeNumbers
+    {
+        get { return _wholeNumbers; }
+        set
+        {
+            if (SetStruct(ref _wholeNumbers, value))
+            {
+                UpdateValue(_value);
                 UpdateVisuals();
             }
         }
@@ -135,6 +126,18 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
         }
     }
 
+    public float MaxAngle
+    {
+        get { return _maxAngle; }
+        set
+        {
+            if (SetStruct(ref _maxAngle, value))
+            {
+                UpdateVisuals();
+            }
+        }
+    }
+
     public float Value
     {
         get
@@ -146,25 +149,36 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
         set { UpdateValue(value); }
     }
 
-    public bool WholeNumbers
+    public RectTransform HandleRect
     {
-        get { return _wholeNumbers; }
+        get { return _handleRect; }
         set
         {
-            if (SetStruct(ref _wholeNumbers, value))
+            if (SetClass(ref _handleRect, value))
             {
-                UpdateValue(_value);
                 UpdateVisuals();
             }
         }
     }
 
-    public float MaxAngle
+    public float Radius
     {
-        get { return _maxAngle; }
+        get { return _radius; }
         set
         {
-            if (SetStruct(ref _maxAngle, value))
+            if (SetStruct(ref _radius, value))
+            {
+                UpdateVisuals();
+            }
+        }
+    }
+
+    public bool TowardCenter
+    {
+        get { return _towardCenter; }
+        set
+        {
+            if (SetStruct(ref _towardCenter, value))
             {
                 UpdateVisuals();
             }
@@ -252,7 +266,7 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
         if (MayEvent(eventData))
         {
             OnBeginDragged.Invoke();
-            Debug.Log("OnBeginDragged");
+            //Debug.Log("OnBeginDragged");
         }
     }
 
@@ -282,7 +296,7 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
         if (MayEvent(eventData))
         {
             OnEndDragged.Invoke();
-            Debug.Log("OnEndDragged");
+            //Debug.Log("OnEndDragged");
         }
     }
 
@@ -331,14 +345,20 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
             UpdateCachedReferences();
 #endif
 
+        var angle = NormalizedValue * _maxAngle;
+
         if (_fillImage)
         {
-            _fillImage.fillAmount = NormalizedValue * (_maxAngle / 360f);
+            _fillImage.fillAmount = angle / 360f;
         }
 
         if (_handleRect)
         {
-            _handleRect.transform.localPosition = GetPointFromFillOrigin(NormalizedValue * _maxAngle);
+            _handleRect.transform.localPosition = GetPointFromFillOrigin(ref angle);
+            if (_towardCenter)
+            {
+                _handleRect.transform.localEulerAngles = new Vector3(0f, 0f, angle);
+            }
         }
     }
 
@@ -410,7 +430,7 @@ public class AnnularSlider : Selectable, IDragHandler, ICanvasElement
     /// <param name="angle"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
-    private Vector2 GetPointFromFillOrigin(float angle)
+    private Vector2 GetPointFromFillOrigin(ref float angle)
     {
         //转化为相对于X轴右侧（FillOrigin.Right）的角度
         switch (_fillOrigin)

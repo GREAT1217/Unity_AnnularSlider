@@ -10,8 +10,6 @@
  *  Description  :  Initial development version.
  *************************************************************************/
 
-using UnityEngine;
-using System.Collections;
 using UnityEditor;
 using UnityEditor.UI;
 
@@ -19,15 +17,18 @@ using UnityEditor.UI;
 public class AnnularSliderEditor : SelectableEditor
 {
     private SerializedProperty _fillImage;
-    private SerializedProperty _handleRect;
-    private SerializedProperty _radius;
     private SerializedProperty _fillOrigin;
     private SerializedProperty _clockwise;
+    private SerializedProperty _wholeNumbers;
     private SerializedProperty _minValue;
     private SerializedProperty _maxValue;
-    private SerializedProperty _value;
-    private SerializedProperty _wholeNumbers;
     private SerializedProperty _maxAngle;
+    private SerializedProperty _value;
+   
+    private SerializedProperty _handleRect;
+    private SerializedProperty _radius;
+    private SerializedProperty _towardCenter;
+
     private SerializedProperty _onValueChanged;
     private SerializedProperty _onBeginDragged;
     private SerializedProperty _onDragging;
@@ -37,15 +38,18 @@ public class AnnularSliderEditor : SelectableEditor
     {
         base.OnEnable();
         _fillImage = serializedObject.FindProperty("_fillImage");
-        _handleRect = serializedObject.FindProperty("_handleRect");
-        _radius = serializedObject.FindProperty("_radius");
         _fillOrigin = serializedObject.FindProperty("_fillOrigin");
         _clockwise = serializedObject.FindProperty("_clockwise");
+        _wholeNumbers = serializedObject.FindProperty("_wholeNumbers");
         _minValue = serializedObject.FindProperty("_minValue");
         _maxValue = serializedObject.FindProperty("_maxValue");
-        _value = serializedObject.FindProperty("_value");
-        _wholeNumbers = serializedObject.FindProperty("_wholeNumbers");
         _maxAngle = serializedObject.FindProperty("_maxAngle");
+        _value = serializedObject.FindProperty("_value");
+        
+        _handleRect = serializedObject.FindProperty("_handleRect");
+        _radius = serializedObject.FindProperty("_radius");
+        _towardCenter = serializedObject.FindProperty("_towardCenter");
+
         _onValueChanged = serializedObject.FindProperty("_onValueChanged");
         _onBeginDragged = serializedObject.FindProperty("_onBeginDragged");
         _onDragging = serializedObject.FindProperty("_onDragging");
@@ -59,24 +63,28 @@ public class AnnularSliderEditor : SelectableEditor
 
         EditorGUILayout.Space();
         EditorGUILayout.PropertyField(_fillImage);
-        EditorGUILayout.PropertyField(_handleRect);
-
         if (_fillImage.objectReferenceValue != null)
         {
+            EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(_fillOrigin);
             EditorGUILayout.PropertyField(_clockwise);
+            EditorGUILayout.PropertyField(_wholeNumbers);
             EditorGUILayout.PropertyField(_minValue);
             EditorGUILayout.PropertyField(_maxValue);
+            EditorGUILayout.Slider(_maxAngle, 0f, 360f);
             EditorGUILayout.Slider(_value, _minValue.floatValue, _maxValue.floatValue);
-            EditorGUILayout.PropertyField(_wholeNumbers);
+            EditorGUI.indentLevel--;
         }
 
+        EditorGUILayout.Space();
+        EditorGUILayout.PropertyField(_handleRect);
         if (_handleRect.objectReferenceValue != null)
         {
+            EditorGUI.indentLevel++;
             EditorGUILayout.PropertyField(_radius);
+            EditorGUILayout.PropertyField(_towardCenter);
+            EditorGUI.indentLevel--;
         }
-
-        EditorGUILayout.Slider(_maxAngle, 0f, 360f);
 
         EditorGUILayout.Space();
         EditorGUILayout.PropertyField(_onValueChanged);
